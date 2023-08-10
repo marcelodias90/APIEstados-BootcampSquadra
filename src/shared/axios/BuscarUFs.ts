@@ -2,7 +2,10 @@ import AppError from '@shared/errors/AppError';
 import ConverterString from '@shared/validator/ConverterString';
 import axios from 'axios';
 
-async function BuscarUFs(ufNome: string, ufSigla: string): Promise<void> {
+async function PesquisaUFnoIbge(
+  ufNome: string,
+  ufSigla: string
+): Promise<void> {
   const ufs = await axios.get(
     `https://servicodados.ibge.gov.br/api/v1/localidades/estados`
   );
@@ -46,4 +49,4 @@ async function BuscarUFs(ufNome: string, ufSigla: string): Promise<void> {
     );
   }
 }
-export default BuscarUFs;
+export default PesquisaUFnoIbge;

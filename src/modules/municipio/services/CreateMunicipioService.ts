@@ -8,12 +8,15 @@ import BuscarMunicipios from '@shared/axios/BuscarMunicipios';
 import ExistsError from '@shared/errors/exceptions/ExistsError';
 import NotFoundError from '@shared/errors/exceptions/NotFoundError';
 import StatusDesativadoError from '@shared/errors/exceptions/StatusDesativadoError';
+import UF from '@modules/uf/typeorm/entities/UF';
 
 interface IRequest {
   nome: string;
   codigoUF: number;
   status: number;
 }
+const ufRespository = getCustomRepository(UFRepository);
+const municipioRespository = getCustomRepository(MunicipioRepository);
 
 export default class CreateMunicipioService {
   public async execute({
@@ -21,12 +24,30 @@ export default class CreateMunicipioService {
     status,
     codigoUF
   }: IRequest): Promise<Municipio[]> {
-    const municipioRespository = getCustomRepository(MunicipioRepository);
-    const ufRespository = getCustomRepository(UFRepository);
     ValidarCampo.validaNomeCampo(nome, 'nome');
     ValidarCampo.validarCodigoCampo(codigoUF, 'codigoUF');
     ValidarCampo.validarStatusCampo(status, 'status');
 
+    const ufVerificado = await this.buscaUFeVerificaStatus(codigoUF);
+    const nomeVerificado = await this.buscaNomeVerificaEConverte(
+      nome,
+      codigoUF
+    );
+
+    await BuscarMunicipios(ufVerificado.sigla, ufVerificado.nome, nome);
+
+    const municipio = municipioRespository.create({
+      nome: nomeVerificado,
+      codigoUF: ufVerificado.codigoUF,
+      status
+    });
+
+    await municipioRespository.save(municipio);
+    const municipios = await municipioRespository.findByFindOrder();
+    return municipios;
+  }
+
+  private async buscaUFeVerificaStatus(codigoUF: number): Promise<UF> {
     const uf = await ufRespository.findOne(codigoUF);
     if (!uf) {
       throw new NotFoundError('UF');
@@ -35,11 +56,17 @@ export default class CreateMunicipioService {
     if (uf.status === 2) {
       throw new StatusDesativadoError('UF', uf.codigoUF, 'codigoUF');
     }
+    return uf;
+  }
 
-    await BuscarMunicipios(uf.sigla, uf.nome, nome);
-
-    const validarNome = ConverterString.replaceAndToUpperCase(nome);
-    const municipioNomes = await municipioRespository.findByNames(validarNome);
+  private async buscaNomeVerificaEConverte(
+    nome: string,
+    codigoUF: number
+  ): Promise<string> {
+    const nomeConvertido = ConverterString.replaceAndToUpperCase(nome);
+    const municipioNomes = await municipioRespository.findByNames(
+      nomeConvertido
+    );
 
     if (municipioNomes?.length) {
       const municipioexists = municipioNomes.map(
@@ -50,14 +77,6 @@ export default class CreateMunicipioService {
         throw new ExistsError('Municipio', 'nome', nome);
       }
     }
-    const municipio = municipioRespository.create({
-      nome: validarNome,
-      codigoUF: uf.codigoUF,
-      status
-    });
-
-    await municipioRespository.save(municipio);
-    const municipios = await municipioRespository.findByFindOrder();
-    return municipios;
+    return nomeConvertido;
   }
 }
