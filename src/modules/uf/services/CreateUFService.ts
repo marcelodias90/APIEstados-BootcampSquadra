@@ -11,38 +11,39 @@ interface IRequest {
   sigla: string;
   status: number;
 }
-const ufRespository = getCustomRepository(UFRepository);
 
 export default class CreateUFService {
+  private ufRespository = getCustomRepository(UFRepository);
+
   public async execute({ nome, sigla, status }: IRequest): Promise<UF[]> {
-    const nomeVerificado = await this.validarNome(nome);
-    const siglaVerificada = await this.validarSigla(sigla);
+    const nomeVerificado = await this.verificarNome(nome);
+    const siglaVerificada = await this.verificaSigla(sigla);
 
     await PesquisaUFnoIbge(nomeVerificado, sigla);
 
-    const uf = ufRespository.create({
+    const uf = this.ufRespository.create({
       sigla: siglaVerificada,
       nome: nomeVerificado,
       status
     });
 
-    await ufRespository.save(uf);
-    const ufs = await ufRespository.findByFindOrder();
+    await this.ufRespository.save(uf);
+    const ufs = await this.ufRespository.findByFindOrder();
     return ufs;
   }
 
-  private async validarNome(nome: string): Promise<string> {
+  private async verificarNome(nome: string): Promise<string> {
     const nomeConvertido = ConverterString.replaceAndToUpperCase(nome);
-    const ufNome = await ufRespository.findByName(nomeConvertido);
+    const ufNome = await this.ufRespository.findByName(nomeConvertido);
     if (ufNome) {
       throw new ExistsError('UF', 'nome', nomeConvertido);
     }
     return nomeConvertido;
   }
 
-  private async validarSigla(sigla: string): Promise<string> {
+  private async verificaSigla(sigla: string): Promise<string> {
     const siglaConvertida = ConverterString.replaceAndToUpperCase(sigla);
-    const ufSigla = await ufRespository.findBySigla(siglaConvertida);
+    const ufSigla = await this.ufRespository.findBySigla(siglaConvertida);
     if (ufSigla) {
       throw new ExistsError('UF', 'sigla', sigla);
     }

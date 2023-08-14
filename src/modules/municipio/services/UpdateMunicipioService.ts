@@ -16,10 +16,10 @@ interface IRequest {
   nome: string;
   status: number;
 }
-const municipioRespository = getCustomRepository(MunicipioRepository);
-const ufRespository = getCustomRepository(UFRepository);
 
 export default class UpdateMunicipioService {
+  private municipioRespository = getCustomRepository(MunicipioRepository);
+  private ufRespository = getCustomRepository(UFRepository);
   public async execute({
     codigoMunicipio,
     nome,
@@ -38,12 +38,12 @@ export default class UpdateMunicipioService {
     municipio.codigoUF = codigoUF;
     municipio.status = status;
 
-    await municipioRespository.save(municipio);
-    return municipioRespository.findByFindOrder();
+    await this.municipioRespository.save(municipio);
+    return this.municipioRespository.findByFindOrder();
   }
 
   private async buscaMunicipio(codigoMunicipio: number): Promise<Municipio> {
-    const municipio = await municipioRespository.findOne(codigoMunicipio);
+    const municipio = await this.municipioRespository.findOne(codigoMunicipio);
     if (!municipio) {
       throw new NotFoundError('Municípo');
     }
@@ -53,7 +53,7 @@ export default class UpdateMunicipioService {
     codigoUF: number,
     municipio: Municipio
   ): Promise<UF> {
-    const uf = await ufRespository.findOne(codigoUF);
+    const uf = await this.ufRespository.findOne(codigoUF);
     if (!uf) {
       throw new NotFoundError('UF');
     }
@@ -69,7 +69,7 @@ export default class UpdateMunicipioService {
     uf: UF,
     municipio: Municipio
   ) {
-    const municipioNomes = await municipioRespository.findByNames(
+    const municipioNomes = await this.municipioRespository.findByNames(
       nomeMunicipio
     );
 
