@@ -13,9 +13,9 @@ interface IRequest {
   sigla: string;
   status: number;
 }
-const ufRespository = getCustomRepository(UFRepository);
 
 export default class UpdateUFService {
+  private ufRespository = getCustomRepository(UFRepository);
   public async execute({
     codigoUF,
     nome,
@@ -38,8 +38,8 @@ export default class UpdateUFService {
     uf.sigla = siglaConvertida;
     uf.status = status;
 
-    await ufRespository.save(uf);
-    return await ufRespository.findByFindOrder();
+    await this.ufRespository.save(uf);
+    return await this.ufRespository.findByFindOrder();
   }
 
   private async verificarUF(
@@ -47,16 +47,16 @@ export default class UpdateUFService {
     nome: string,
     sigla: string
   ): Promise<UF> {
-    const uf = await ufRespository.findOne(codigoUF);
+    const uf = await this.ufRespository.findOne(codigoUF);
     if (!uf) {
       throw new NotFoundError('UF');
     }
 
-    const ufNome = await ufRespository.findByName(nome);
+    const ufNome = await this.ufRespository.findByName(nome);
     if (ufNome && codigoUF !== ufNome.codigoUF) {
       throw new ExistsError('UF', 'nome', nome);
     }
-    const ufSigla = await ufRespository.findBySigla(sigla);
+    const ufSigla = await this.ufRespository.findBySigla(sigla);
     if (ufSigla && codigoUF !== ufSigla.codigoUF) {
       throw new ExistsError('UF', 'sigla', sigla);
     }

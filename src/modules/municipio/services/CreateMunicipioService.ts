@@ -4,7 +4,7 @@ import Municipio from '../typeorm/entities/Municipio';
 import UFRepository from '@modules/uf/typeorm/repositories/UFRepository';
 import ValidarCampo from '@shared/validator/ValidarCampo';
 import ConverterString from '@shared/validator/ConverterString';
-import BuscarMunicipios from '@shared/axios/BuscarMunicipios';
+import BuscarMunicipioIbge from '@shared/axios/BuscarMunicipios';
 import ExistsError from '@shared/errors/exceptions/ExistsError';
 import NotFoundError from '@shared/errors/exceptions/NotFoundError';
 import StatusDesativadoError from '@shared/errors/exceptions/StatusDesativadoError';
@@ -15,10 +15,10 @@ interface IRequest {
   codigoUF: number;
   status: number;
 }
-const ufRespository = getCustomRepository(UFRepository);
-const municipioRespository = getCustomRepository(MunicipioRepository);
 
 export default class CreateMunicipioService {
+  private ufRespository = getCustomRepository(UFRepository);
+  private municipioRespository = getCustomRepository(MunicipioRepository);
   public async execute({
     nome,
     status,
@@ -34,21 +34,21 @@ export default class CreateMunicipioService {
       codigoUF
     );
 
-    await BuscarMunicipios(ufVerificado.sigla, ufVerificado.nome, nome);
+    await BuscarMunicipioIbge(ufVerificado.sigla, ufVerificado.nome, nome);
 
-    const municipio = municipioRespository.create({
+    const municipio = this.municipioRespository.create({
       nome: nomeVerificado,
       codigoUF: ufVerificado.codigoUF,
       status
     });
 
-    await municipioRespository.save(municipio);
-    const municipios = await municipioRespository.findByFindOrder();
+    await this.municipioRespository.save(municipio);
+    const municipios = await this.municipioRespository.findByFindOrder();
     return municipios;
   }
 
   private async buscaUFeVerificaStatus(codigoUF: number): Promise<UF> {
-    const uf = await ufRespository.findOne(codigoUF);
+    const uf = await this.ufRespository.findOne(codigoUF);
     if (!uf) {
       throw new NotFoundError('UF');
     }
@@ -64,7 +64,7 @@ export default class CreateMunicipioService {
     codigoUF: number
   ): Promise<string> {
     const nomeConvertido = ConverterString.replaceAndToUpperCase(nome);
-    const municipioNomes = await municipioRespository.findByNames(
+    const municipioNomes = await this.municipioRespository.findByNames(
       nomeConvertido
     );
 
