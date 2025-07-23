@@ -16,11 +16,10 @@ Este projeto é uma **API RESTful** para gerenciamento de cadastros de pessoas c
 
 ## 🛠️ Tecnologias
 
-- **Linguagem:** [Ex: Node.js, Python, etc.]
-- **Framework:** [Ex: Express, FastAPI, etc.]
-- **Banco de Dados:** [Ex: PostgreSQL, MongoDB, etc.]
-- **Validações:** [Ex: Joi, Marshmallow, etc.]
-- **API de CEP:** [Ex: ViaCEP, Correios]
+- **Linguagem:** [TypeScript, NodeJs]
+- **Framework:** [TypeOrm]
+- **Banco de Dados:** [Postgres]
+- **API de CEP:** [ViaCEP]
 
 ---
 
